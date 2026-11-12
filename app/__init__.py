@@ -1,0 +1,1 @@
+"""Telegram link uploader bot."""

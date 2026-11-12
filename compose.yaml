@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - bot_data:/data
+      # Only uncomment when YTDLP_COOKIES_FILE=/run/secrets/cookies.txt
+      # - ./cookies.txt:/run/secrets/cookies.txt:ro
+
+volumes:
+  bot_data:
