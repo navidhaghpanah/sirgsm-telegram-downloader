@@ -22,7 +22,7 @@ from aiogram.types import (
 from app.admin import router as admin_router
 from app.config import Settings
 from app.database import Database
-from app.downloader import MediaDownloadError, extract_url, human_size, should_probe
+from app.downloader import MediaDownloadError, extract_url, human_size, should_probe, uses_ytdlp
 from app.processor import (
     ActiveJob, QueueState, cleanup_shared_files, process_url, safe_edit,
 )
@@ -309,7 +309,9 @@ async def _show_quality_menu(
             )
             await safe_edit(
                 status, _quality_menu_text(details.title, details.duration, settings),
-                reply_markup=_quality_keyboard(token, details.choices, settings),
+                reply_markup=_quality_keyboard(
+                    token, details.choices, settings, direct=not uses_ytdlp(url)
+                ),
             )
         except MediaDownloadError as exc:
             if str(exc) == "UNSUPPORTED_URL":
@@ -397,6 +399,7 @@ def _quality_keyboard(
     settings_or_max,
     subtitles_available: bool = False,
     subtitles_enabled: bool = False,
+    direct: bool = False,
 ) -> InlineKeyboardMarkup:
     if isinstance(settings_or_max, Settings):
         settings = settings_or_max
@@ -422,6 +425,10 @@ def _quality_keyboard(
         rows.append([InlineKeyboardButton(
             text=f"💬 زیرنویس: {'روشن ✅' if subtitles_enabled else 'خاموش'}",
             callback_data=f"q:{token}:s",
+        )])
+    if direct:
+        rows.append([InlineKeyboardButton(
+            text="📦 دانلود مستقیم فایل", callback_data=f"q:{token}:direct"
         )])
     rows.append([InlineKeyboardButton(text="❌ انصراف", callback_data=f"q:{token}:cancel")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
@@ -464,10 +471,24 @@ async def quality_callback_handler(
         pending.subtitles = not pending.subtitles
         await callback.message.edit_reply_markup(
             reply_markup=_quality_keyboard(
-                token, pending.choices, settings, pending.subtitles_available, pending.subtitles
+                token, pending.choices, settings, pending.subtitles_available, pending.subtitles,
+                direct=not uses_ytdlp(pending.url),
             )
         )
         await callback.answer(f"زیرنویس {'روشن' if pending.subtitles else 'خاموش'} شد")
+        return
+    if action == "direct" and len(parts) == 3:
+        lock = user_locks.setdefault(pending.user_id, asyncio.Lock())
+        if lock.locked():
+            await callback.answer("یک عملیات دیگر در حال انجام است.", show_alert=True)
+            return
+        quality_sessions.pop(token, None)
+        await callback.answer("دانلود مستقیم فایل انتخاب شد")
+        await process_url(
+            callback.message, bot, settings, database, download_semaphore,
+            user_locks, active_jobs, queue_state, pending.url,
+            status=callback.message, job_user_id=pending.user_id, force_direct=True,
+        )
         return
     if action != "c" or len(parts) != 4:
         await callback.answer("درخواست نامعتبر.", show_alert=True)

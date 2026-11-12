@@ -27,10 +27,12 @@ YTDLP_DOMAINS = (
     "dailymotion.com", "reddit.com", "streamable.com", "pinterest.com",
 )
 DIRECT_SUFFIXES = {
-    ".zip", ".rar", ".7z", ".tar", ".gz", ".exe", ".msi", ".apk", ".aab",
+    ".zip", ".rar", ".7z", ".tar", ".gz", ".xz", ".bz2", ".zst", ".tgz",
+    ".exe", ".msi", ".msix", ".msixbundle", ".appx", ".appxbundle",
+    ".apk", ".aab", ".ipa", ".jar", ".deb", ".rpm", ".pkg", ".sh", ".bin", ".dat",
     ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt",
     ".mp3", ".wav", ".ogg", ".flac", ".m4a", ".mp4", ".mkv", ".webm",
-    ".jpg", ".jpeg", ".png", ".gif", ".webp", ".iso", ".dmg", ".deb",
+    ".jpg", ".jpeg", ".png", ".gif", ".webp", ".iso", ".dmg",
 }
 CHUNK_SIZE = 1024 * 1024
 ABSOLUTE_DOWNLOAD_LIMIT = 2 * 1024 * 1024 * 1024

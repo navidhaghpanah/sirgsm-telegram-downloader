@@ -82,6 +82,12 @@ class QualityChoiceTests(unittest.TestCase):
         self.assertIn("🚫", buttons[1].text)
         self.assertTrue(all(len(button.callback_data) <= 64 for button in buttons))
 
+    def test_generic_link_has_direct_download_fallback(self):
+        keyboard = _quality_keyboard("abc", [], 8_500_000, direct=True)
+        buttons = [button for row in keyboard.inline_keyboard for button in row]
+        self.assertEqual(buttons[0].callback_data, "q:abc:direct")
+        self.assertIn("دانلود مستقیم", buttons[0].text)
+
 
 class SessionTests(unittest.TestCase):
     def test_main_menu_has_callback_buttons(self):

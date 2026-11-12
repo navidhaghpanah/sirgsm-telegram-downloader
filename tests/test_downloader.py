@@ -7,6 +7,7 @@ from app.downloader import (
     _validate_public_url,
     extract_url,
     human_size,
+    should_probe,
     uses_ytdlp,
 )
 
@@ -33,6 +34,11 @@ class UrlTests(unittest.TestCase):
 
     def test_direct_url_is_not_sent_to_ytdlp(self):
         self.assertFalse(uses_ytdlp("https://cdn.example.com/file.zip"))
+
+    def test_windows_installer_is_downloaded_directly(self):
+        url = "https://github.com/hiddify/hiddify-app/releases/download/v5.5.5/Hiddify-Windows-Setup-x64.Msix"
+        self.assertFalse(should_probe(url))
+        self.assertFalse(should_probe("https://example.com/app.APPX"))
 
 
 class SafetyTests(unittest.IsolatedAsyncioTestCase):
