@@ -51,7 +51,7 @@ class Settings:
         timeout = _bounded_int("DOWNLOAD_TIMEOUT_SECONDS", 1800, 30, 86400)
         max_height = _bounded_int("YTDLP_MAX_HEIGHT", 1080, 144, 4320)
         daily_count = _bounded_int("DAILY_DOWNLOAD_LIMIT", 10, 1, 100000)
-        daily_mb = _env_float("DAILY_SIZE_LIMIT_MB", 500)
+        daily_mb = _env_float("DAILY_SIZE_LIMIT_MB", 1024)
         if daily_mb <= 0:
             raise RuntimeError("DAILY_SIZE_LIMIT_MB باید بزرگ‌تر از صفر باشد.")
         link_ttl = _bounded_int("FILE_LINK_TTL_SECONDS", 3600, 60, 604800)

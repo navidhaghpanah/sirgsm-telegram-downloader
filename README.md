@@ -123,7 +123,7 @@ docker compose logs -f bot
 | `AUTO_COMPRESS` | `true` | فشرده‌سازی ویدیوی بزرگ |
 | `MAX_PLAYLIST_ITEMS` | `5` | حداکثر موارد هر پلی‌لیست |
 | `DAILY_DOWNLOAD_LIMIT` | `10` | تعداد دانلود روزانه هر کاربر |
-| `DAILY_SIZE_LIMIT_MB` | `500` | حجم مجاز روزانه هر کاربر |
+| `DAILY_SIZE_LIMIT_MB` | `1024` | حجم مجاز روزانه هر کاربر؛ معادل ۱ گیگابایت |
 | `ADMIN_IDS` | خالی | ادمین‌های ربات |
 | `ALLOWED_USER_IDS` | خالی | محدودسازی به کاربران مشخص؛ خالی یعنی عمومی |
 | `FORCE_JOIN_CHANNEL` | خالی | کانال عضویت اجباری؛ ربات باید ادمین کانال باشد |
