@@ -1,0 +1,23 @@
+services:
+  bale-bot:
+    build: .
+    env_file: .env.bale
+    restart: unless-stopped
+    environment:
+      BOT_PLATFORM: bale
+      BOT_API_ROOT: https://tapi.bale.ai
+      MAX_FILE_SIZE_MB: "49"
+      WEB_ENABLED: "true"
+      WEB_HOST: 0.0.0.0
+      WEB_PORT: "8080"
+      DATABASE_PATH: /data/bale.db
+      DOWNLOAD_DIR: /data/downloads
+      FILE_STORAGE_DIR: /telegram_data/shared_files
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - bale_data:/data
+      - bot_data:/telegram_data
+
+volumes:
+  bale_data:

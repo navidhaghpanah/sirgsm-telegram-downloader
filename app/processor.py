@@ -168,7 +168,8 @@ async def _process_url_inner(
                 await _announce_success(message, sent, cached.size)
                 await database.record_download(user_id, cached.size)
                 outcome, outcome_size = "done", cached.size
-                await safe_edit(status, "⚡ از کش تلگرام ارسال شد؛ بدون دانلود مجدد.")
+                messenger = "بله" if settings.platform == "bale" else "تلگرام"
+                await safe_edit(status, f"⚡ از کش {messenger} ارسال شد؛ بدون دانلود مجدد.")
                 return
             except TelegramBadRequest:
                 await database.delete_cached_file(cache_key)
@@ -223,7 +224,7 @@ async def _process_url_inner(
                 if media.size > settings.max_file_size:
                     if not settings.public_base_url:
                         raise FileTooLargeError(
-                            f"حجم نهایی ({human_size(media.size)}) از سقف تلگرام بیشتر است؛ کیفیت پایین‌تری انتخاب کنید."
+                            f"حجم نهایی ({human_size(media.size)}) از سقف آپلود پیام‌رسان بیشتر است؛ کیفیت پایین‌تری انتخاب کنید."
                         )
                     link = await _share_media(media, settings, database)
                     await message.answer(
@@ -242,7 +243,9 @@ async def _process_url_inner(
                     reply_markup=cancel_keyboard(job_id),
                 )
                 action = ChatAction.UPLOAD_AUDIO if media.is_audio else ChatAction.UPLOAD_VIDEO if media.is_video else ChatAction.UPLOAD_DOCUMENT
-                await bot.send_chat_action(message.chat.id, action)
+                # Bale's API currently replies "action not found" for upload actions.
+                if settings.platform != "bale":
+                    await bot.send_chat_action(message.chat.id, action)
                 sent = await _upload_media(bot, message.chat.id, url, media)
                 _raise_if_cancelled(cancel_event)
                 file_id, unique_id, file_type = _telegram_attachment(sent)
@@ -267,15 +270,15 @@ async def _process_url_inner(
         await safe_edit(status, f"❌ {html.escape(str(exc))}")
     except TelegramRetryAfter as exc:
         outcome_error = "rate limited"
-        await safe_edit(status, f"⏳ محدودیت تلگرام؛ {exc.retry_after} ثانیه بعد تلاش کنید.")
+        await safe_edit(status, f"⏳ محدودیت پیام‌رسان؛ {exc.retry_after} ثانیه بعد تلاش کنید.")
     except TelegramNetworkError:
-        outcome_error = "telegram network"
-        logger.exception("Telegram network error")
-        await safe_edit(status, "❌ ارتباط با تلگرام قطع شد.")
+        outcome_error = "messenger network"
+        logger.exception("Messenger network error")
+        await safe_edit(status, "❌ ارتباط با پیام‌رسان قطع شد.")
     except TelegramBadRequest as exc:
         outcome_error = str(exc)
-        logger.warning("Telegram rejected upload: %s", exc)
-        await safe_edit(status, "❌ تلگرام فایل را قبول نکرد؛ حجم یا قالب مجاز نیست.")
+        logger.warning("Messenger rejected upload: %s", exc)
+        await safe_edit(status, "❌ پیام‌رسان فایل را قبول نکرد؛ حجم یا قالب مجاز نیست.")
     except Exception as exc:
         outcome_error = str(exc)
         logger.exception("Unexpected processing error")

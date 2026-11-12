@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!.env.bale.example
 cookies.txt
 downloads/
 shared_files/

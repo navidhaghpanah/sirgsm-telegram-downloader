@@ -49,7 +49,7 @@ def create_web_app(settings: Settings, database: Database) -> FastAPI:
             f"<tr><td>{row['user_id']}</td><td>{html.escape(row['first_name'] or '')}</td>"
             f"<td>{'🚫' if row['blocked'] else '✅'}</td><td>{row['daily_count']}</td>"
             f"<td>{human_size(row['total_bytes'])}</td>"
-            f"<td><form method='post' action='/admin/{'unblock' if row['blocked'] else 'block'}/{row['user_id']}'>"
+            f"<td><form method='post' action='admin/{'unblock' if row['blocked'] else 'block'}/{row['user_id']}'>"
             f"<button>{'آزاد کردن' if row['blocked'] else 'مسدود کردن'}</button></form></td></tr>"
             for row in users
         )
@@ -76,11 +76,11 @@ button{{padding:6px 12px;cursor:pointer}}code{{direction:ltr}}</style></head><bo
     @app.post("/admin/block/{user_id}", response_class=HTMLResponse)
     async def block_user(user_id: int, _: str = Depends(authorize)) -> HTMLResponse:
         await database.set_blocked(user_id, True)
-        return HTMLResponse("<script>location='/admin'</script>")
+        return HTMLResponse("<script>location='admin'</script>")
 
     @app.post("/admin/unblock/{user_id}", response_class=HTMLResponse)
     async def unblock_user(user_id: int, _: str = Depends(authorize)) -> HTMLResponse:
         await database.set_blocked(user_id, False)
-        return HTMLResponse("<script>location='/admin'</script>")
+        return HTMLResponse("<script>location='admin'</script>")
 
     return app

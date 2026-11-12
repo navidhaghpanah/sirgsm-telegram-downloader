@@ -52,14 +52,14 @@ BOT_SHORT_DESCRIPTION = "دانلود فایل و ویدیو با انتخاب �
 HELP_TEXT = (
     "<b>ربات دانلود و آپلود لینک</b>\n\n"
     "• لینک مستقیم فایل\n• YouTube و Instagram\n• TikTok، Aparat، X، SoundCloud و سایت‌های بیشتر\n\n"
-    "کیفیت و حجم تقریبی را انتخاب کنید یا خروجی MP3 بگیرید. دانلود تکراری از کش تلگرام، "
+    "کیفیت و حجم تقریبی را انتخاب کنید یا خروجی MP3 بگیرید. دانلود تکراری از کش پیام‌رسان، "
     "سریع و بدون مصرف مجدد ترافیک سرور ارسال می‌شود.\n\n"
     "دستورها:\n/quota مشاهده سهمیه\n/about درباره ما\n/limits محدودیت‌ها\n\n"
     + BRANDING_HTML
 )
 ABOUT_TEXT = (
     "<b>ℹ️ درباره ما</b>\n\n"
-    "این ربات برای تبدیل لینک فایل و ویدیو به فایل قابل دانلود در تلگرام ساخته شده است.\n\n"
+    "این ربات برای تبدیل لینک فایل و ویدیو به فایل قابل دانلود در تلگرام و بله ساخته شده است.\n\n"
     "💎 <b>اسپانسر و حامی پروژه:</b>\n<a href=\"https://sirgsm.ir\">sirgsm.ir</a>\n\n"
     "👨‍💻 <b>سازنده و توسعه‌دهنده:</b>\nNavid Haghbayan\n\n"
     "💬 <b>ارتباط مستقیم با سازنده:</b>\n@nhaghbayan\n\nاز همراهی شما سپاسگزاریم. 🙏"
@@ -561,7 +561,13 @@ async def main() -> None:
     logging.basicConfig(level=settings.log_level, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
     database = Database(settings.database_path)
     await database.connect()
-    session = AiohttpSession(api=TelegramAPIServer.from_base(settings.telegram_api_root)) if settings.telegram_api_root else None
+    if settings.platform == "bale":
+        from app.bale import BaleSession
+        session = BaleSession(
+            api=TelegramAPIServer.from_base(settings.telegram_api_root or "https://tapi.bale.ai")
+        )
+    else:
+        session = AiohttpSession(api=TelegramAPIServer.from_base(settings.telegram_api_root)) if settings.telegram_api_root else None
     bot = Bot(
         token=settings.bot_token, session=session,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
@@ -573,8 +579,10 @@ async def main() -> None:
         BotCommand(command="about", description="درباره ما"),
         BotCommand(command="limits", description="محدودیت‌ها"),
     ])
-    await bot.set_my_description(description=BOT_DESCRIPTION)
-    await bot.set_my_short_description(short_description=BOT_SHORT_DESCRIPTION)
+    # Bale currently implements setMyCommands but returns 501 for profile descriptions.
+    if settings.platform == "telegram":
+        await bot.set_my_description(description=BOT_DESCRIPTION)
+        await bot.set_my_short_description(short_description=BOT_SHORT_DESCRIPTION)
 
     web_server = None
     web_task = None
@@ -588,8 +596,8 @@ async def main() -> None:
         web_task = asyncio.create_task(web_server.serve())
     cleanup_task = asyncio.create_task(cleanup_shared_files(settings, database))
     logger.info(
-        "Bot starting | max=%s | jobs=%s | web=%s | local_api=%s | links=%s",
-        human_size(settings.max_file_size), settings.max_concurrent_jobs,
+        "Bot starting | platform=%s | max=%s | jobs=%s | web=%s | custom_api=%s | links=%s",
+        settings.platform, human_size(settings.max_file_size), settings.max_concurrent_jobs,
         settings.web_enabled, bool(settings.telegram_api_root), bool(settings.public_base_url),
     )
     try:

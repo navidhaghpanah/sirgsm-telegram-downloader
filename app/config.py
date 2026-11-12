@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 @dataclass(frozen=True, slots=True)
 class Settings:
     bot_token: str
+    platform: str
     download_dir: Path
     database_path: Path
     file_storage_dir: Path
@@ -43,6 +44,9 @@ class Settings:
         token = os.getenv("BOT_TOKEN", "").strip()
         if not token:
             raise RuntimeError("BOT_TOKEN تنظیم نشده است.")
+        platform = os.getenv("BOT_PLATFORM", "telegram").strip().lower()
+        if platform not in {"telegram", "bale"}:
+            raise RuntimeError("BOT_PLATFORM باید telegram یا bale باشد.")
 
         max_mb = _env_float("MAX_FILE_SIZE_MB", 49)
         if not 0.1 <= max_mb <= 2000:
@@ -72,8 +76,13 @@ class Settings:
         if base_url and not base_url.startswith(("https://", "http://")):
             raise RuntimeError("PUBLIC_BASE_URL باید با http یا https شروع شود.")
 
+        api_root = (
+            os.getenv("BOT_API_ROOT", "").strip()
+            or os.getenv("TELEGRAM_API_ROOT", "").strip()
+        ) or None
         return cls(
             bot_token=token,
+            platform=platform,
             download_dir=download_dir,
             database_path=database_path,
             file_storage_dir=storage_dir,
@@ -85,7 +94,7 @@ class Settings:
             admin_ids=_env_ids("ADMIN_IDS"),
             cookies_file=cookies_file,
             ytdlp_proxy=os.getenv("YTDLP_PROXY", "").strip() or None,
-            telegram_api_root=os.getenv("TELEGRAM_API_ROOT", "").strip() or None,
+            telegram_api_root=api_root,
             log_level=os.getenv("LOG_LEVEL", "INFO").strip().upper(),
             daily_download_limit=daily_count,
             daily_size_limit=int(daily_mb * 1024 * 1024),

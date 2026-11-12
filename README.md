@@ -1,6 +1,6 @@
-# ربات تلگرام دانلود و آپلود لینک
+# ربات تلگرام و بله دانلود و آپلود لینک
 
-ربات `sirgsm_dl_bot` با Python، aiogram 3، yt-dlp، FFmpeg و SQLite.
+ربات‌های `sirgsm_dl_bot` در تلگرام و `sirgsm_download_bot` در بله با Python، aiogram 3، yt-dlp، FFmpeg و SQLite.
 
 ## امکانات
 
@@ -100,6 +100,21 @@ docker compose -f compose.yaml -f compose.local-api.yaml -f compose.web.yaml up 
 
 برای فایلهای تا ۲ گیگابایت و پردازش سنگین، سرور قوی‌تر و فضای دیسک بیشتر توصیه می‌شود. صرفاً تغییر عدد حجم بدون Local API، محدودیت Bot API معمولی را حذف نمی‌کند.
 
+## نسخه‌ی بله
+
+بله API سازگار با بخش عمده‌ای از Telegram Bot API ارائه می‌کند. سرویس بله همان موتور دانلود، انتخاب کیفیت، MP3، زیرنویس، پلی‌لیست، سهمیه، مدیریت و لینک موقت را استفاده می‌کند، اما دیتابیس، کاربران، سهمیه‌ها و `file_id` cache آن کاملاً از تلگرام جداست.
+
+مستندات بله در حال حاضر سقف 50 مگابایت را برای `sendDocument`، `sendVideo` و `sendAudio` اعلام می‌کند؛ سقف امن سرویس 49 MiB است. Local Bot API تلگرام این محدودیت بله را تغییر نمی‌دهد. فایل بزرگ‌تر، در صورت امکان فشرده و در غیر این صورت با لینک HTTPS یک‌ساعته تحویل می‌شود. بله متدهای Description پروفایل را هنوز پیاده‌سازی نکرده است، بنابراین معرفی کامل در `/start` و `/about` قرار دارد.
+
+```bash
+cp .env.bale.example .env.bale
+# توکن واقعی بله و ADMIN_IDS را فقط در .env.bale سرور قرار دهید.
+docker compose -f compose.yaml -f compose.bale.yaml up -d --build bale-bot
+docker compose logs -f bale-bot
+```
+
+در استقرار فعلی که Local API و Nginx تلگرام نیز موجود است، overlayهای قبلی را هم در فرمان Compose نگه دارید. وب بله فقط روی `127.0.0.1:8081` باز می‌شود و Nginx مسیر `/bale/` را به آن proxy می‌کند. بنابراین لینک‌های بله با `https://dl.sirgsm.ir/bale/files/...` و پنل وب آن با `https://dl.sirgsm.ir/bale/admin` در دسترس‌اند و توکن‌های دو دیتابیس مخلوط نمی‌شوند.
+
 ## راه‌اندازی معمولی
 
 ```bash
@@ -115,8 +130,10 @@ docker compose logs -f bot
 
 | متغیر | پیش‌فرض | توضیح |
 |---|---:|---|
-| `BOT_TOKEN` | — | توکن ربات |
-| `MAX_FILE_SIZE_MB` | `49` | سقف آپلود تلگرام |
+| `BOT_TOKEN` | — | توکن ربات تلگرام یا بله |
+| `BOT_PLATFORM` | `telegram` | پیام‌رسان: `telegram` یا `bale` |
+| `BOT_API_ROOT` | خالی | endpoint سفارشی؛ برای بله `https://tapi.bale.ai` |
+| `MAX_FILE_SIZE_MB` | `49` | سقف آپلود پیام‌رسان |
 | `MAX_CONCURRENT_JOBS` | `2` | دانلودهای هم‌زمان |
 | `YTDLP_MAX_HEIGHT` | `1080` | حداکثر ارتفاع تصویر |
 | `YTDLP_ALL_SITES` | `true` | تلاش برای سایتهای generic yt-dlp |
